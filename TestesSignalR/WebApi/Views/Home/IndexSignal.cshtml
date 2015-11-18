@@ -1,0 +1,94 @@
+﻿
+<style type="text/css">
+    .messages-wrapper {
+        border: 1px solid #ccc;
+        padding: 4px;
+        border-radius: 5px 5px 0 0;
+    }
+
+    #messages {
+        height: 300px;
+        display: table-cell !important;
+        vertical-align: bottom;
+    }
+
+    div.typing {
+        padding-top: 3px;
+    }
+
+        div.typing > div {
+            padding: 0;
+        }
+</style>
+
+<h1>@ViewBag.Title</h1>
+
+<form id="chatform" action="">
+    <div class="row">
+        <div class="col-lg-10 col-lg-offset-1 messages-wrapper">
+            <div id="messages"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-10 col-lg-offset-1" id="alerts"></div>
+    </div>
+    <div class="row typing">
+        <div class="col-lg-10 col-lg-offset-1">
+            <div class="input-group">
+                <span class="input-group-btn">
+                    <input type="button" class="close_connection btn btn-danger" value="Sair" />
+                </span>
+                <input type="text" id="inputbox" class="form-control" />
+                <span class="input-group-btn">
+                    <input type="submit" class="btn btn-default" value="Enviar" />
+                </span>
+            </div>
+        </div>
+    </div>
+</form>
+
+@Scripts.Render("~/bundles/jquery")
+<script src="~/Scripts/jquery.signalR-2.2.0.js"></script>
+<script src="~/signalr/hubs"></script>
+
+<script type="text/javascript">
+    // Não é compatível com Internet Explorer 9 ou versões inferiores.
+    $(function () {
+        // Obtem o nome do usuário
+        var username = prompt('Informe seu nome de usuário:');
+
+        var chat = $.connection.testeSignalRHub;
+        $.connection.hub.logging = true;
+        $.connection.hub.qs = { 'nome': username };
+
+        // chamada RPC
+        chat.client.mensagemGeral = function (message) {
+            $('#messages').append('<div>' + message + '</div>');
+        };
+
+        // Evento do botão sair.
+        $('.close_connection').click(function (event) {
+            event.preventDefault();
+            $.connection.hub.stop();
+            $('#alerts').html('<span class="label label-info">Você saiu.</span>');
+        });
+
+        $.connection.hub.start().done(function () {
+            $('#alerts').html('<span class="label label-success">Conectado.</span>' + ' tipo: ' + $.connection.hub.transport.name);
+            $('#inputbox').focus();
+
+            $('#chatform').submit(function (event) {
+
+                // Executa a chamada ao servidor.
+                chat.server.enviar($('#inputbox').val());
+
+                $('#inputbox').val('').focus();
+                event.preventDefault();
+            });
+        });
+
+        $.connection.hub.error(function () {
+            $('#alerts').html('<span class="label label-danger">ERRO OCORRIDO.</span>');
+        });
+    });
+</script>

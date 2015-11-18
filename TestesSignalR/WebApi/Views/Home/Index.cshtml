@@ -1,0 +1,99 @@
+﻿
+<style type="text/css">
+    .messages-wrapper {
+        border: 1px solid #ccc;
+        padding: 4px;
+        border-radius: 5px 5px 0 0;
+    }
+
+    #messages {
+        height: 300px;
+        display: table-cell !important;
+        vertical-align: bottom;
+    }
+
+    div.typing {
+        padding-top: 3px;
+    }
+
+        div.typing > div {
+            padding: 0;
+        }
+</style>
+
+<h1>@ViewBag.Title</h1>
+
+<form id="chatform" action="">
+    <div class="row">
+        <div class="col-lg-10 col-lg-offset-1 messages-wrapper">
+            <div id="messages"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-10 col-lg-offset-1" id="alerts"></div>
+    </div>
+    <div class="row typing">
+        <div class="col-lg-10 col-lg-offset-1">
+            <div class="input-group">
+                <span class="input-group-btn">
+                    <input type="button" class="close_connection btn btn-danger" value="Sair" />
+                </span>
+                <input type="text" id="inputbox" class="form-control" />
+                <span class="input-group-btn">
+                    <input type="submit" class="btn btn-default" value="Enviar" />
+                </span>
+            </div>
+        </div>
+    </div>
+</form>
+
+@Scripts.Render("~/bundles/jquery")
+<script type="text/javascript">
+    // Não é compatível com Internet Explorer 9 ou versões inferiores.
+    $(function () {
+        // Obtem o nome do usuário
+        var username = prompt('Informe seu nome de usuário:');
+
+        // Porta de conexão e pasta de acesso
+        var port = window.location.port;
+        var pathname = window.location.pathname;
+
+        var uri = 'ws://' + window.location.hostname + (!port ? '' : ':' + port) + (pathname != '/' ? pathname.replace('chat.htm', 'api/TesteSockets') : '/api/TesteSockets') + '?username=' + username;
+        // Conecta ao servidor via websocket.
+        websocket = new WebSocket(uri);
+
+        // Evento do botão sair.
+        $('.close_connection').click(function (event) {
+            event.preventDefault();
+            websocket.close();
+        })
+
+        // Callback de abertura de conexão.
+        websocket.onopen = function () {
+            $('#alerts').html('<span class="label label-success">Conectado.</span>');
+            $('#inputbox').focus();
+
+            $('#chatform').submit(function (event) {
+
+                // Executa a chamada ao servidor.
+                websocket.send($('#inputbox').val());
+
+                $('#inputbox').val('').focus();
+                event.preventDefault();
+            });
+        };
+
+        websocket.onclose = function (event) {
+            $('#alerts').html('<span class="label label-info">Você saiu.</span>');
+        };
+
+        websocket.onerror = function (event) {
+            $('#alerts').html('<span class="label label-danger">ERRO OCORRIDO.</span>');
+        };
+
+        // Não utiliza comandos RPC.
+        websocket.onmessage = function (event) {
+            $('#messages').append('<div>' + event.data + '</div>');
+        };
+    });
+</script>

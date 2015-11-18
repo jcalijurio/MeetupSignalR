@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Aplicação SignalR</title>
+    <style type="text/css">
+        .container {
+            width: 1000px;
+            height: 430px;
+            border: 1px solid #009;
+            border-radius: 7px;
+            overflow: hidden;
+        }
+
+        .talk {
+            height: 400px;
+            background-color: rgba(220, 220, 250, .2);
+        }
+
+        .send_field {
+            height: 100px;
+        }
+
+        .campo {
+            width: 850px;
+            padding:6px;
+        }
+
+        .btn_enviar {
+            width: 132px;
+            padding: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="talk"></div>
+        <div class="send_field" style="overflow:hidden">
+            <div style="float: left;">
+                <input class="campo" />
+            </div>
+            <div style="float: left;">
+                <input type="button" class="btn_enviar" value="Enviar" />
+            </div>
+        </div>
+    </div>
+    <script src="Scripts/jquery-1.6.4.js"></script>
+    <script src="Scripts/jquery.signalR-2.2.0.js"></script>
+    <script src="signalr/hubs"></script>
+
+    <script type="text/javascript">
+        // Declarando referência ao proxy de acesso ao ChatHub
+        var chat = $.connection.chatHub;
+        // Ativando o log de eventos a ser exibido no console
+        $.connection.hub.logging = true;
+        // Método cliente que recebe a chamada do hub.
+        chat.client.broadcastMessage = function (name, message) {
+            var encodedName = $('<div />').text(name).html();
+            var encodedMsg = $('<div />').text(message).html();
+            // Inclusão de texto na tela.
+            $('.talk').append('<li><strong>' + encodedName
+                + '</strong>:&nbsp;&nbsp;' + encodedMsg + '</li>');
+        };
+        $('.campo').focus();
+        
+        var sendMessage = function () {
+            // Chamada ao método Send do Hub.
+            chat.server.send('Asp.Net MVC', $('.campo').val());
+            $('.campo').val('').focus();
+        };
+
+        // Iniciando a conexão com o servidor.
+        $.connection.hub.start().done(function () {
+            $('.btn_enviar').click(sendMessage);
+            $('.campo').keydown(function (e) {
+                var key = e.which || event.keyCode;
+                if (key == 13)
+                    sendMessage();
+            });
+        });
+    </script>
+
+</body>
+</html>

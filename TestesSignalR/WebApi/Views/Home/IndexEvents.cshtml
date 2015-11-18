@@ -1,0 +1,15 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>@ViewBag.Title</h1>
+
+<div id="conteudo"></div>
+
+<script type="text/javascript">
+    var source = new EventSource("/Home/Evento");
+    source.onmessage = function (event) {
+        console.log(event);
+        document.getElementById('conteudo').innerHTML += event.data + '<br />';
+    };
+</script>
